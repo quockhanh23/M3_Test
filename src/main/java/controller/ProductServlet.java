@@ -23,6 +23,7 @@ public class ProductServlet extends HttpServlet {
     private ProductService productService = new ProductServiceImpl();
     private CategoryService categoryService = new CategoryServiceImpl();
     private C1Service c1Service = new C1ServiceImpl();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
@@ -34,7 +35,11 @@ public class ProductServlet extends HttpServlet {
                 showListProduct(request, response);
                 break;
             case "createProduct":
-                showCreate(request, response);
+                try {
+                    showCreate(request, response);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
                 break;
             case "deleteProduct":
                 showDelete(request, response);
@@ -44,6 +49,7 @@ public class ProductServlet extends HttpServlet {
                 break;
         }
     }
+
     private void showEdit(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         Product product = productService.findById(id);
@@ -60,9 +66,12 @@ public class ProductServlet extends HttpServlet {
         dispatcher.forward(request, response);
     }
 
-    private void showCreate(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void showCreate(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("product/createProduct.jsp");
+        List<Category> list1 = categoryService.findAll();
+        request.setAttribute("category", list1);
         requestDispatcher.forward(request, response);
+
     }
 
     private void showListProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -75,6 +84,7 @@ public class ProductServlet extends HttpServlet {
         request.setAttribute("alo2", c1);
         dispatcher.forward(request, response);
     }
+
     List<Category> findCategory(List<Product> products) {
         List<Category> list = new ArrayList<>();
         for (int i = 0; i < products.size(); i++) {
@@ -83,6 +93,7 @@ public class ProductServlet extends HttpServlet {
         }
         return list;
     }
+
     List<C1> findC1(List<Category> categories) {
         List<C1> list1 = new ArrayList<>();
         for (int i = 0; i < categories.size(); i++) {
@@ -122,6 +133,7 @@ public class ProductServlet extends HttpServlet {
                 break;
         }
     }
+
     private void createProduct(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
         int id = Integer.parseInt(request.getParameter("id"));
         String name = request.getParameter("name");
@@ -140,9 +152,9 @@ public class ProductServlet extends HttpServlet {
     }
 
     private void deleteProduct(HttpServletRequest request, HttpServletResponse response) throws SQLException, IOException {
-            int id = Integer.parseInt(request.getParameter("id"));
-            productService.delete(id);
-            response.sendRedirect("/products");
+        int id = Integer.parseInt(request.getParameter("id"));
+        productService.delete(id);
+        response.sendRedirect("/products");
     }
 
     private void saveEdit(HttpServletRequest request, HttpServletResponse response) throws SQLException, IOException {
@@ -157,7 +169,7 @@ public class ProductServlet extends HttpServlet {
         String img = request.getParameter("img");
         int categoryId = Integer.parseInt(request.getParameter("categoryId"));
         int quantity = Integer.parseInt(request.getParameter("quantity"));
-        Product product = new Product(id,name, price, description, action1,
+        Product product = new Product(id, name, price, description, action1,
                 capacity, barrel, weight, img, categoryId, quantity);
         productService.update(product);
         response.sendRedirect("/products");
